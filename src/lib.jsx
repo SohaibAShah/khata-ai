@@ -98,12 +98,12 @@ export function sampleData() {
   const now = Date.now()
   const people = [
     // Fictional demo customers; phone numbers are placeholders, not real people.
-    { name: 'Ali Bhai', phone: '03000000001' },
-    { name: 'Sana Baji', phone: '03000000002' },
-    { name: 'Usman (school van)', phone: '' },
-    { name: 'Farah Teacher', phone: '03000000004' },
-    { name: 'Bilal Store', phone: '' },
-    { name: 'Hamza', phone: '03000000006' },
+    { name: 'Ali Bhai', phone: '03000000001', lang: 'urdu' },
+    { name: 'Sana Baji', phone: '03000000002', lang: 'roman' },
+    { name: 'Usman (school van)', phone: '03000000003', lang: 'roman' },
+    { name: 'Farah Teacher', phone: '03000000004', lang: 'english' },
+    { name: 'Bilal Store', phone: '03000000005', lang: 'english' },
+    { name: 'Hamza', phone: '03000000006', lang: 'roman' },
   ]
   const txns = [
     [0, 'credit', 1250, 'notebooks and gel pens', 41],

@@ -14,12 +14,26 @@ const STATUS = {
 
 const ROUTES = [
   ['✍️', 'Reading your entries', 'device', 'Names and debts stay private'],
-  ['💬', 'Drafting reminders', 'device', 'Personal, short, works offline'],
+  ['💬', 'Drafting reminders', 'device', "In each customer's language; you send them"],
   ['📷', 'Scanning khata pages', 'cloud', 'Handwriting needs a bigger model'],
   ['📊', 'Monthly advisor', 'cloud', 'Names replaced with codes first'],
 ]
 
-export default function Settings({ shopName, setShopName, deviceState, refreshDevice, storeKind, uid, onSample }) {
+function RuleNumber({ label, value, onChange, min, max, suffix }) {
+  return (
+    <label className="rule">
+      <span>{label}</span>
+      <span className="rule-input">
+        <input type="number" inputMode="numeric" min={min} max={max} value={value}
+          onChange={(e) => onChange(Math.min(max, Math.max(min, Math.round(Number(e.target.value) || min))))} />
+        <span className="muted small">{suffix}</span>
+      </span>
+    </label>
+  )
+}
+
+export default function Settings({ shopName, setShopName, deviceState, refreshDevice, storeKind, uid, onSample, rules, setRules }) {
+  const setRule = (k) => (v) => setRules({ ...rules, [k]: v })
   const [mode, setMode] = useState(getForcedMode())
   const [progress, setProgress] = useState(null)
   const stats = useStats()
@@ -42,6 +56,23 @@ export default function Settings({ shopName, setShopName, deviceState, refreshDe
       <section className="card">
         <label className="label first" htmlFor="shop">Shop name <span className="muted">· signs your reminders</span></label>
         <input id="shop" dir="auto" value={shopName} onChange={(e) => setShopName(e.target.value)} />
+      </section>
+
+      <section className="card">
+        <h3 className="card-title">Daily reminders</h3>
+        <p className="small muted">
+          Each day, customers who are due appear on the Khata tab with a message in their own language, drafted
+          automatically on this device when Gemini Nano is ready. You send it from your own WhatsApp or SMS with one tap:
+          no server sends anything and phone numbers aren't shared with any messaging service.
+        </p>
+        <div className="rules">
+          <RuleNumber label="First reminder when money is pending" value={rules.afterDays} onChange={setRule('afterDays')} min={1} max={180} suffix="days" />
+          <RuleNumber label="Then remind again every" value={rules.everyDays} onChange={setRule('everyDays')} min={1} max={60} suffix="days" />
+          <RuleNumber label="Use a firm tone after" value={rules.firmAfter} onChange={setRule('firmAfter')} min={1} max={10} suffix="reminders" />
+          <RuleNumber label="Quiet hours start" value={rules.quietFrom} onChange={setRule('quietFrom')} min={0} max={23} suffix=":00" />
+          <RuleNumber label="Quiet hours end" value={rules.quietTo} onChange={setRule('quietTo')} min={0} max={23} suffix=":00" />
+        </div>
+        <p className="small muted">Set each customer's language, or switch them off, from their page. Reminders stop when they pay.</p>
       </section>
 
       <section className="card">

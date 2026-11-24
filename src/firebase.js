@@ -29,7 +29,11 @@ export const RC_DEFAULTS = {
   // Cloud fallback model for light tasks.
   cloud_model: 'gemini-3.5-flash-lite',
   // Cloud model for heavy tasks (handwritten notebook photos, monthly insights).
-  heavy_model: 'gemini-3.8-flash',
+  // Flash-Lite reads our khata pages correctly in ~3s; gemini-3.8-flash was taking 15-45s or
+  // returning "high demand" (Nov 2026), so it is the retry model instead. Switchable via Remote Config.
+  heavy_model: 'gemini-3.5-flash-lite',
+  // Model for the one retry after a busy or failed cloud call.
+  fallback_model: 'gemini-3.8-flash',
 }
 
 let app, auth, db, remoteConfig, ai

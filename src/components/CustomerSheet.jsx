@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import { draftReminder } from '../ai.js'
 import { unpaidCredits } from '../store.js'
 import { ago, Avatar, recordInference, rs, SourceBadge } from '../lib.jsx'
+import { intlNumber, LANGS, langOf, logReminder, smsLink, whatsappLink } from '../reminders.js'
 import { friendlyError } from './Composer.jsx'
 
 export default function CustomerSheet({ customer, txns, store, shopName, onClose, notify }) {
   const [phone, setPhone] = useState(customer.phone || '')
   const [manual, setManual] = useState({ type: 'credit', amount: '', items: '' })
-  const [lang, setLang] = useState('roman')
+  const [lang, setLangState] = useState(langOf(customer))
   const [tone, setTone] = useState('warm')
+  const setLang = (k) => { setLangState(k); if (k !== langOf(customer)) store.updateCustomer(customer.id, { lang: k }) }
   const [reminder, setReminder] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -56,8 +58,8 @@ export default function CustomerSheet({ customer, txns, store, shopName, onClose
     notify('Entry deleted')
   }
 
-  const waNumber = phone.replace(/\D/g, '').replace(/^0/, '92')
-  const waLink = reminder && waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(reminder.text)}` : null
+  const canSend = reminder && intlNumber(phone)
+  const sent = (via) => { logReminder(store, customer, via); notify(`Reminder logged for ${customer.name}`) }
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -90,8 +92,8 @@ export default function CustomerSheet({ customer, txns, store, shopName, onClose
             </div>
             <p className="small muted">Drafted privately on this device when Gemini Nano is available. You review it and send it yourself.</p>
             <div className="row">
-              <div className="seg">
-                {[['roman', 'Roman Urdu'], ['urdu', 'اردو'], ['english', 'English']].map(([k, l]) => (
+              <div className="seg" title="Preferred language, saved for this customer">
+                {LANGS.map(([k, l]) => (
                   <button key={k} className={lang === k ? 'on' : ''} onClick={() => setLang(k)}>{l}</button>
                 ))}
               </div>
@@ -109,11 +111,21 @@ export default function CustomerSheet({ customer, txns, store, shopName, onClose
               <button className={`btn ${reminder ? '' : 'primary'}`} onClick={generate} disabled={busy}>
                 {busy ? <span className="spinner" /> : '✍️'} {busy ? 'Writing…' : reminder ? 'Rewrite' : 'Draft reminder'}
               </button>
-              {reminder && (waLink
-                ? <a className="btn whatsapp" href={waLink} target="_blank" rel="noreferrer">Send on WhatsApp</a>
-                : <span className="small muted">Add a WhatsApp number below to send.</span>)}
+              {reminder && (canSend
+                ? <>
+                    <a className="btn whatsapp" href={whatsappLink(phone, reminder.text)} target="_blank" rel="noreferrer" onClick={() => sent('whatsapp')}>WhatsApp</a>
+                    <a className="btn" href={smsLink(phone, reminder.text)} onClick={() => sent('sms')}>SMS</a>
+                  </>
+                : <span className="small muted">Add a phone number below to send.</span>)}
               {reminder && <button className="btn ghost" onClick={() => { navigator.clipboard?.writeText(reminder.text); notify('Copied') }}>Copy</button>}
             </div>
+            <label className="switch small">
+              <input type="checkbox" checked={customer.autoRemind !== false} onChange={(e) => store.updateCustomer(customer.id, { autoRemind: e.target.checked })} />
+              <span>Include in daily reminders</span>
+              {customer.lastReminder && (
+                <span className="muted"> · last sent {ago(customer.lastReminder.at)} by {customer.lastReminder.via === 'sms' ? 'SMS' : 'WhatsApp'}</span>
+              )}
+            </label>
           </section>
         )}
 
@@ -130,7 +142,7 @@ export default function CustomerSheet({ customer, txns, store, shopName, onClose
           </form>
         </section>
 
-        <label className="label" htmlFor="phone">WhatsApp number</label>
+        <label className="label" htmlFor="phone">WhatsApp / SMS number</label>
         <input id="phone" inputMode="tel" value={phone} placeholder="03xx xxxxxxx"
           onChange={(e) => setPhone(e.target.value)}
           onBlur={() => phone !== (customer.phone || '') && store.updateCustomer(customer.id, { phone })} />
