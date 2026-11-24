@@ -68,8 +68,8 @@ function model(task, useAlt = false) {
     reminder: { mode: rc('reminder_mode'), cloud: rc('cloud_model') },
     insights: { mode: 'PREFER_IN_CLOUD', cloud: rc('heavy_model'), schema: insightSchema },
   }[task]
-  // Fallback when the primary cloud model is overloaded: swap the light and heavy models.
-  if (useAlt) spec.cloud = spec.cloud === rc('cloud_model') ? rc('heavy_model') : rc('cloud_model')
+  // Fallback when the primary cloud model is overloaded: use a different model for the one retry.
+  if (useAlt) spec.cloud = spec.cloud === rc('fallback_model') ? rc('cloud_model') : rc('fallback_model')
   // A retry always goes to the cloud, so a slow or stuck Nano can't block it a second time.
   const mode = useAlt ? InferenceMode.ONLY_IN_CLOUD : resolveMode(spec.mode)
   const key = `${task}:${mode}:${spec.cloud}`
@@ -223,13 +223,17 @@ function sanitize(entries) {
 }
 
 export async function draftReminder({ shopName, name, balance, days, items, lang, tone }) {
+  // A one-line example per language: without it Gemini Nano tends to answer in English when asked for Roman Urdu.
   const langLine = {
-    roman: 'Write in Roman Urdu (Urdu in English letters), the way people text on WhatsApp in Pakistan.',
-    urdu: 'Write in Urdu script.',
-    english: 'Write in simple English.',
-  }[lang] || 'Write in Roman Urdu.'
-  const prompt = `Write a short WhatsApp message from a shopkeeper to a regular customer about money they owe.
-${langLine}
+    roman: `Language: Roman Urdu only, meaning Urdu words written in English letters, the way Pakistanis text. Do NOT write English sentences.
+Example of the style (do not copy it): "Assalam-o-Alaikum Ali bhai, umeed hai aap khairiyat se hon ge. Aap ke Rs 1,500 baqi hain. Jab suhoolat ho, ada kar dijiye ga. Shukriya, Madina Store"`,
+    urdu: `Language: Urdu script (اردو) only. Do not use English or Roman letters, except the shop name may stay as written.
+Example of the style (do not copy it): "السلام علیکم علی بھائی، امید ہے آپ خیریت سے ہوں گے۔ آپ کے 1,500 روپے باقی ہیں، سہولت ہو تو ادا کر دیجیے گا۔ شکریہ، مدینہ اسٹور"`,
+    english: `Language: simple, polite English.
+Example of the style (do not copy it): "Assalam-o-Alaikum Ali bhai, hope you're well. Rs 1,500 is still pending on your account. Please clear it whenever convenient. Thanks, Madina Store"`,
+  }[lang]
+  const prompt = `Write a short WhatsApp message from a Pakistani shopkeeper to a regular customer about money they owe.
+${langLine || 'Language: Roman Urdu.'}
 Tone: ${tone === 'firm' ? 'polite but firm, ask for a date' : 'warm and respectful, like a neighbour; keep the relationship'}.
 Max 3 sentences. No emojis except one at most. Do not threaten. Sign off with the shop name.
 Shop: ${shopName || 'our shop'}

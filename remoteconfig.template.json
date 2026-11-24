@@ -13,8 +13,12 @@
       "description": "Cloud fallback model for light tasks."
     },
     "heavy_model": {
-      "defaultValue": { "value": "gemini-3.8-flash" },
+      "defaultValue": { "value": "gemini-3.5-flash-lite" },
       "description": "Cloud model for khata photo OCR and monthly insights."
+    },
+    "fallback_model": {
+      "defaultValue": { "value": "gemini-3.8-flash" },
+      "description": "Model for the one retry after a busy or failed cloud call."
     }
   }
 }

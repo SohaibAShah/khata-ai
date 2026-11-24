@@ -23,6 +23,7 @@ Internet at the shop is often patchy.
 | ✍️ **Write it like you'd write the khata** | Type or speak `ali bhai 3 register 450 udhaar, sana ne 2k jama karwaye`. AI turns it into structured entries (customer, credit/payment, amount, items) for you to check, then save. English, Roman Urdu, Urdu script or a mix. |
 | 📷 **Scan old khata pages** | Photograph a handwritten notebook page or a supplier bill to import every row at once. |
 | 💬 **Polite reminders** | One tap drafts a respectful WhatsApp reminder in Roman Urdu, Urdu or English, warm or firm. The shopkeeper reviews and sends it themselves. |
+| ⏰ **Daily reminders** | Each customer has a preferred language. Every day the app lists who is due (rules in Settings: first after 30 days, then every 7, firmer after 2, quiet hours) and drafts each message on the device. One tap sends it from the shopkeeper's own WhatsApp or SMS. |
 | 📊 **Monthly advisor** | Recovery rate, who to call first and one concrete tip, with customer names pseudonymised before anything leaves the device. |
 | 🔒 **Privacy meter** | Shows what share of AI requests ran on-device. Every result carries an *On-device* or *Cloud* badge. |
 | 📶 **Works offline** | Installable PWA, Firestore offline cache and on-device Gemini Nano, so the counter keeps working without internet. |
@@ -36,7 +37,7 @@ Every AI call goes through `getGenerativeModel(ai, { mode, inCloudParams, onDevi
 |---|---|---|
 | Parse a ledger note | `PREFER_ON_DEVICE` | Customer names and debts are the most private data a shop has. On-device is instant, free and works offline. |
 | Draft a reminder | `PREFER_ON_DEVICE` | Same personal data, and a short text task that Gemini Nano handles well. |
-| Read a khata photo | `PREFER_IN_CLOUD` (`gemini-3.8-flash`) | Messy handwriting needs a bigger multimodal model. Falls back to on-device (JPEG/PNG) when offline. |
+| Read a khata photo | `PREFER_IN_CLOUD` (`gemini-3.5-flash-lite`, retry on `gemini-3.8-flash`) | Messy handwriting needs a bigger multimodal model. Falls back to on-device (JPEG/PNG) when offline. |
 | Monthly insights | `PREFER_IN_CLOUD` | Reasoning across the whole book. **Names are replaced with `C1, C2…` on-device first** and swapped back locally. The *Show what the cloud sees* button shows the exact payload. |
 
 Other details:
@@ -93,11 +94,13 @@ src/
   ai.js            Firebase AI Logic hybrid models, schemas, routing policy, pseudonymisation
   firebase.js      App, App Check, Auth, Firestore offline cache, Remote Config
   store.js         Ledger data layer (Firestore, or a localStorage fallback) + balance maths
+  reminders.js     Daily reminder rules: who is due, tone, phone links, send log
   lib.jsx          Formatting, hooks, inference stats, sample data
   App.jsx          Shell, ledger screen, navigation
   components/
     Composer.jsx       Natural-language and photo entry, review-before-save
-    CustomerSheet.jsx  Customer history, manual entries, AI reminder → WhatsApp
+    CustomerSheet.jsx  Customer history, manual entries, AI reminder → WhatsApp / SMS
+    RemindersDue.jsx   "Reminders due today": auto-drafted on-device, one-tap send
     Insights.jsx       Stats + cloud advisor with "what the cloud sees"
     Settings.jsx       On-device model status/download, routing, privacy meter, data
 ```

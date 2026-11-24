@@ -6,7 +6,9 @@ import { ago, Avatar, loadSample, rs, useLocal, useOnline, useToast } from './li
 import Composer from './components/Composer.jsx'
 import CustomerSheet from './components/CustomerSheet.jsx'
 import Insights from './components/Insights.jsx'
+import RemindersDue from './components/RemindersDue.jsx'
 import Settings from './components/Settings.jsx'
+import { DEFAULT_RULES, dueReminders } from './reminders.js'
 
 const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))])
 
@@ -22,6 +24,9 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [deviceState, setDeviceState] = useState('checking')
+  const [savedRules, setRules] = useLocal('khata-ai-reminder-rules', DEFAULT_RULES)
+  const rules = { ...DEFAULT_RULES, ...savedRules }
+  const [drafts, setDrafts] = useState({})
   const [toast, notify] = useToast()
   const online = useOnline()
 
@@ -62,6 +67,9 @@ export default function App() {
     .filter((r) => !query || r.name.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => b.balance - a.balance || b.lastAt - a.lastAt)
   const open = rows.find((r) => r.id === openId)
+  const ruleKey = JSON.stringify(rules)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const due = useMemo(() => dueReminders(rows, rules), [rows, ruleKey])
 
   const deviceChip = deviceState === 'available'
     ? { cls: 'ok', text: '🔒 On-device AI' }
@@ -114,6 +122,8 @@ export default function App() {
             </div>
 
             <div className="ledger-side">
+            <RemindersDue due={due} txns={data.txns} rules={rules} store={store} shopName={shopName} deviceState={deviceState}
+              drafts={drafts} setDrafts={setDrafts} notify={notify} onOpen={setOpenId} />
             {!rows.length ? (
               <section className="card welcome">
                 <h2>Your khata, without the paper</h2>
@@ -162,7 +172,7 @@ export default function App() {
                     </li>
                   ))}
                 </ul>
-                {stats.overdueAmt > 0 && filter !== 'overdue' && (
+                {stats.overdueAmt > 0 && filter !== 'overdue' && !due.length && (
                   <button className="overdue-nudge" onClick={() => setFilter('overdue')}>
                     ⏰ {rs(stats.overdueAmt)} has been pending over {OVERDUE_DAYS} days. Send reminders →
                   </button>
@@ -177,7 +187,7 @@ export default function App() {
 
         {store && tab === 'settings' && (
           <Settings shopName={shopName} setShopName={setShopName} deviceState={deviceState} refreshDevice={refreshDevice}
-            store={store} storeKind={store.kind} uid={uid} onSample={sample} />
+            store={store} storeKind={store.kind} uid={uid} onSample={sample} rules={rules} setRules={setRules} />
         )}
       </main>
 
