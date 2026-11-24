@@ -1,0 +1,20 @@
+{
+  "parameters": {
+    "entry_mode": {
+      "defaultValue": { "value": "PREFER_ON_DEVICE" },
+      "description": "Inference mode for parsing ledger notes (private data → on-device first)."
+    },
+    "reminder_mode": {
+      "defaultValue": { "value": "PREFER_ON_DEVICE" },
+      "description": "Inference mode for drafting payment reminders."
+    },
+    "cloud_model": {
+      "defaultValue": { "value": "gemini-3.5-flash-lite" },
+      "description": "Cloud fallback model for light tasks."
+    },
+    "heavy_model": {
+      "defaultValue": { "value": "gemini-3.8-flash" },
+      "description": "Cloud model for khata photo OCR and monthly insights."
+    }
+  }
+}
