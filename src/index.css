@@ -312,3 +312,29 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-app
 .rule:first-child { border-top: 0; }
 .rule-input { display: inline-flex; align-items: center; gap: 6px; flex: none; }
 .rule-input input { width: 64px; text-align: right; padding: 6px 8px; }
+
+/* ---------- insight charts (computed on the device) ---------- */
+:root { --chart-credit: #1c5fa6; --chart-paid: #2a9d68; --chart-grid: #e9e2d3; }
+@media (prefers-color-scheme: dark) { :root { --chart-credit: #4f93e8; --chart-paid: #2fa872; --chart-grid: #262d28; } }
+.chart p { margin: 2px 0 12px; }
+.age-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.age-bars li { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 10px; }
+.age-track { height: 14px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.age-fill { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--owe); }
+.age-fill.age-0 { opacity: 0.4; } .age-fill.age-1 { opacity: 0.7; }
+.age-val { white-space: nowrap; text-align: right; min-width: 92px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 6px 0 4px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.key-credit { background: var(--chart-credit); }
+.key-paid { background: var(--chart-paid); }
+.readout { margin: 0 0 10px; min-height: 1.45em; }
+.flow { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; height: 170px; padding-top: 18px;
+  background: linear-gradient(var(--chart-grid), var(--chart-grid)) 0 18px / 100% 1px no-repeat; }
+.flow-max { position: absolute; top: 0; left: 0; font-size: 11px; }
+.flow-col { display: flex; flex-direction: column; align-items: stretch; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 8px; min-width: 0; }
+.flow-col.on { background: var(--surface-2); }
+.flow-bars { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 2px; border-bottom: 1px solid var(--line); padding: 0 3px; }
+.flow-bar { width: 42%; max-width: 18px; border-radius: 4px 4px 0 0; min-height: 0; }
+.flow-x { font-size: 10.5px; color: var(--muted); text-align: center; padding-top: 4px; white-space: nowrap; overflow: hidden; }
+.flow-col.on .flow-x { color: var(--text); font-weight: 600; }

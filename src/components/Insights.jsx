@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { monthlyInsights } from '../ai.js'
 import { DAY, recordInference, rs, SourceBadge } from '../lib.jsx'
 import { friendlyError } from './Composer.jsx'
+import { AgeingChart, FlowChart } from './InsightCharts.jsx'
 
 export default function Insights({ rows, txns, onOpen }) {
   const [res, setRes] = useState(null)
@@ -51,6 +52,9 @@ export default function Insights({ rows, txns, onOpen }) {
         <div className="stat"><span className="small muted">Collected (30d)</span><strong>{rs(paid30)}</strong></div>
         <div className="stat"><span className="small muted">Recovery rate</span><strong>{credit30 ? Math.round((paid30 / credit30) * 100) : 0}%</strong></div>
       </section>
+
+      <FlowChart txns={txns} />
+      <AgeingChart rows={rows} />
 
       <section className="card">
         <div className="row between">
